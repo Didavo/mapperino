@@ -9,6 +9,8 @@ interface EventSidebarProps {
   selectedEventId: number | null;
   onEventSelect: (id: number) => void;
   isLoading: boolean;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
 export default function EventSidebar({
@@ -16,17 +18,15 @@ export default function EventSidebar({
   selectedEventId,
   onEventSelect,
   isLoading,
+  isOpen,
+  onClose,
 }: EventSidebarProps) {
   const listRef = useRef<HTMLDivElement>(null);
   const selectedRef = useRef<HTMLDivElement>(null);
 
-  // Scroll selected event into view when it changes
   useEffect(() => {
     if (selectedEventId !== null && selectedRef.current) {
-      selectedRef.current.scrollIntoView({
-        behavior: "smooth",
-        block: "nearest",
-      });
+      selectedRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
     }
   }, [selectedEventId]);
 
@@ -35,17 +35,37 @@ export default function EventSidebar({
   ).length;
 
   return (
-    <aside className="flex flex-col w-80 shrink-0 h-full bg-white border-r border-gray-200 shadow-sm">
+    <aside
+      className={[
+        "flex flex-col h-full bg-white border-r border-gray-200 shadow-sm",
+        // Mobile: absolute overlay, slide in/out from left
+        "absolute inset-y-0 left-0 w-[85vw] max-w-xs z-20",
+        "transition-transform duration-300 ease-in-out",
+        isOpen ? "translate-x-0" : "-translate-x-full",
+        // Desktop: always visible, back in normal flex flow
+        "sm:relative sm:inset-auto sm:w-80 sm:max-w-none sm:shrink-0 sm:translate-x-0",
+      ].join(" ")}
+    >
       {/* Header */}
-      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-sm font-semibold text-gray-700">
-          Veranstaltungen
-        </h2>
-        {!isLoading && (
-          <p className="text-xs text-gray-400 mt-0.5">
-            {events.length} Events · {withCoords} auf Karte
-          </p>
-        )}
+      <div className="px-4 py-3 border-b border-gray-200 bg-gray-50 flex items-center justify-between">
+        <div>
+          <h2 className="text-sm font-semibold text-gray-700">Veranstaltungen</h2>
+          {!isLoading && (
+            <p className="text-xs text-gray-400 mt-0.5">
+              {events.length} Events · {withCoords} auf Karte
+            </p>
+          )}
+        </div>
+        <button
+          onClick={onClose}
+          className="sm:hidden p-1.5 rounded-md text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+          aria-label="Schließen"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
+            <line x1="18" y1="6" x2="6" y2="18" />
+            <line x1="6" y1="6" x2="18" y2="18" />
+          </svg>
+        </button>
       </div>
 
       {/* List */}

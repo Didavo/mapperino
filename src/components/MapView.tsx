@@ -126,7 +126,6 @@ function buildStackPopupHTML(features: GeoJSON.Feature[]): string {
 // ── Event-Pin HTML-Element ────────────────────────────────────────────────────
 function createEventElement(feature: GeoJSON.Feature, selected: boolean): HTMLElement {
   const p = feature.properties ?? {};
-  const color = PIN_COLOR;
 
   const dateStr = p.event_date
     ? new Date(p.event_date as string).toLocaleDateString("de-DE", {
@@ -201,6 +200,7 @@ interface MapViewProps {
   radiusKm: number | null;
   radiusCenter: { lat: number; lng: number } | null;
   onRadiusCenterChange: (center: { lat: number; lng: number }) => void;
+  initialCenter?: { lat: number; lng: number };
 }
 
 // ── Komponente ────────────────────────────────────────────────────────────────
@@ -211,6 +211,7 @@ export default function MapView({
   radiusKm,
   radiusCenter,
   onRadiusCenterChange,
+  initialCenter,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -343,7 +344,7 @@ export default function MapView({
     }
 
     // ── Einzel-Events und virtuelle Stacks ────────────────────────────────
-    for (const [coordKey, group] of coordGroups) {
+    for (const [coordKey, group] of Array.from(coordGroups)) {
       if (group.length === 1) {
         const feature = group[0];
         const markerId = `event-${feature.properties?.id as number}`;
@@ -400,8 +401,8 @@ export default function MapView({
     const map = new maplibregl.Map({
       container: containerRef.current,
       style: OPENFREEMAP_STYLE,
-      center: DEFAULT_CENTER,
-      zoom: DEFAULT_ZOOM,
+      center: initialCenter ? [initialCenter.lng, initialCenter.lat] : DEFAULT_CENTER,
+      zoom: initialCenter ? 11 : DEFAULT_ZOOM,
     });
 
     map.addControl(new maplibregl.NavigationControl(), "top-right");
