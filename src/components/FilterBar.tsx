@@ -314,7 +314,7 @@ export default function FilterBar({
           {/* Quelle */}
           <div className="flex flex-col gap-2">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quelle</span>
-            <div className="border border-gray-200 rounded-lg overflow-hidden">
+            <div className="border border-gray-200 rounded-lg overflow-y-auto max-h-48">
               <label className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
                 <input
                   type="checkbox"
