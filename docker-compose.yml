@@ -14,7 +14,7 @@ services:
       - scraper_db    # Mapperino → event_scraper_db
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/events?from=2099-01-01"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://127.0.0.1:3000/api/events?from=2099-01-01"]
       interval: 30s
       timeout: 10s
       retries: 3
