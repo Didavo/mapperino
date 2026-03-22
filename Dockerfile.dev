@@ -1,0 +1,15 @@
+# Development Dockerfile – hot-reload via volume mounts
+FROM node:20-alpine
+WORKDIR /app
+
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Copy everything (source will be overridden by volume mount)
+COPY . .
+
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV NODE_ENV=development
+
+EXPOSE 3000
+CMD ["npm", "run", "dev"]

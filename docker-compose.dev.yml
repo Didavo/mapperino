@@ -1,0 +1,21 @@
+services:
+  mapperino:
+    build:
+      context: .
+      dockerfile: Dockerfile.dev
+    image: mapperino:dev
+    container_name: mapperino-dev
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env.example
+    environment:
+      NODE_ENV: development
+      WATCHPACK_POLLING: "true"
+      CHOKIDAR_USEPOLLING: "true"
+    volumes:
+      - ./src:/app/src
+      - ./public:/app/public
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
