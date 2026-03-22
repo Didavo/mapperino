@@ -16,21 +16,22 @@ interface FilterBarProps {
   onRadiusChange: (km: number | null) => void;
 }
 
+function today(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
 function getThisWeek(): [string, string] {
   const now = new Date();
   const day = now.getDay() || 7;
-  const monday = new Date(now);
-  monday.setDate(now.getDate() - day + 1);
-  const sunday = new Date(monday);
-  sunday.setDate(monday.getDate() + 6);
-  return [monday.toISOString().slice(0, 10), sunday.toISOString().slice(0, 10)];
+  const sunday = new Date(now);
+  sunday.setDate(now.getDate() - day + 7);
+  return [today(), sunday.toISOString().slice(0, 10)];
 }
 
 function getThisMonth(): [string, string] {
   const now = new Date();
-  const first = new Date(now.getFullYear(), now.getMonth(), 1);
   const last = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-  return [first.toISOString().slice(0, 10), last.toISOString().slice(0, 10)];
+  return [today(), last.toISOString().slice(0, 10)];
 }
 
 const RADIUS_OPTIONS: { label: string; value: number | null }[] = [
