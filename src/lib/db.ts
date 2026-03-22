@@ -1,4 +1,4 @@
-import { Pool } from "pg";
+import { Pool, QueryResultRow } from "pg";
 
 // Singleton pattern – important for Next.js hot-reload in dev mode
 // (prevents creating a new pool on every module re-evaluation)
@@ -17,7 +17,7 @@ if (process.env.NODE_ENV !== "production") {
   globalForPg.pgPool = pool;
 }
 
-export async function query<T extends Record<string, unknown> = Record<string, unknown>>(
+export async function query<T extends QueryResultRow = QueryResultRow>(
   sql: string,
   params?: unknown[]
 ): Promise<T[]> {
