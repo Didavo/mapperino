@@ -197,6 +197,7 @@ interface MapViewProps {
   events: Event[];
   selectedEventId: number | null;
   onEventSelect: (id: number) => void;
+  onEventOpen?: (id: number) => void;
   radiusKm: number | null;
   radiusCenter: { lat: number; lng: number } | null;
   onRadiusCenterChange: (center: { lat: number; lng: number }) => void;
@@ -208,6 +209,7 @@ export default function MapView({
   events,
   selectedEventId,
   onEventSelect,
+  onEventOpen,
   radiusKm,
   radiusCenter,
   onRadiusCenterChange,
@@ -226,11 +228,13 @@ export default function MapView({
 
   // Refs gegen stale closures
   const onEventSelectRef = useRef(onEventSelect);
+  const onEventOpenRef = useRef(onEventOpen);
   const selectedIdRef = useRef(selectedEventId);
   const eventsRef = useRef(events);
   const onRadiusCenterChangeRef = useRef(onRadiusCenterChange);
 
   onEventSelectRef.current = onEventSelect;
+  onEventOpenRef.current = onEventOpen;
   selectedIdRef.current = selectedEventId;
   eventsRef.current = events;
   onRadiusCenterChangeRef.current = onRadiusCenterChange;
@@ -360,6 +364,13 @@ export default function MapView({
           onEventSelectRef.current(feature.properties?.id as number);
         });
 
+        el.querySelector<HTMLElement>(".event-pin__label")?.addEventListener("click", (e) => {
+          e.stopPropagation();
+          const id = feature.properties?.id as number;
+          onEventSelectRef.current(id);
+          onEventOpenRef.current?.(id);
+        });
+
         const marker = new maplibregl.Marker({ element: el, anchor: "center" })
           .setLngLat(coords)
           .addTo(map);
@@ -403,9 +414,12 @@ export default function MapView({
       style: OPENFREEMAP_STYLE,
       center: initialCenter ? [initialCenter.lng, initialCenter.lat] : DEFAULT_CENTER,
       zoom: initialCenter ? 11 : DEFAULT_ZOOM,
+      pitchWithRotate: false,
+      dragRotate: false,
+      touchPitch: false,
     });
 
-    map.addControl(new maplibregl.NavigationControl(), "top-right");
+    map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.addControl(
       new maplibregl.GeolocateControl({
         positionOptions: { enableHighAccuracy: true },

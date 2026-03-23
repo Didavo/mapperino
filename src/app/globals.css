@@ -126,9 +126,12 @@ body {
   z-index: 20;
 }
 
-.event-pin:hover .event-pin__label {
+.event-pin:hover .event-pin__label,
+.event-pin--selected .event-pin__label {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+  pointer-events: auto;
+  cursor: pointer;
 }
 
 .event-pin__label-img {

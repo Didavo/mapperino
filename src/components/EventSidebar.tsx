@@ -26,7 +26,7 @@ export default function EventSidebar({
 
   useEffect(() => {
     if (selectedEventId !== null && selectedRef.current) {
-      selectedRef.current.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      selectedRef.current.scrollIntoView({ behavior: "smooth", block: "center" });
     }
   }, [selectedEventId]);
 
@@ -39,7 +39,7 @@ export default function EventSidebar({
       className={[
         "flex flex-col h-full bg-white border-r border-gray-200 shadow-sm",
         // Mobile: absolute overlay, slide in/out from left
-        "absolute inset-y-0 left-0 w-[85vw] max-w-xs z-20",
+        "absolute inset-y-0 left-0 w-[85vw] max-w-xs z-[1000]",
         "transition-transform duration-300 ease-in-out",
         isOpen ? "translate-x-0" : "-translate-x-full",
         // Desktop: always visible, back in normal flex flow

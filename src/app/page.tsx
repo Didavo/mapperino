@@ -178,8 +178,13 @@ export default function HomePage() {
     setSelectedEventId((prev) => (prev === id ? null : id));
   }, []);
 
+  const handleEventOpen = useCallback((id: number) => {
+    setSelectedEventId(id);
+    setSidebarOpen(true);
+  }, []);
+
   return (
-    <div className="flex flex-col h-screen overflow-hidden bg-gray-50">
+    <div className="flex flex-col h-[100dvh] overflow-hidden bg-gray-50">
       <FilterBar
         fromDate={fromDate}
         toDate={toDate}
@@ -270,7 +275,7 @@ export default function HomePage() {
         {/* Mobile backdrop */}
         {sidebarOpen && (
           <div
-            className="sm:hidden absolute inset-0 bg-black/30 z-10"
+            className="sm:hidden absolute inset-0 bg-black/30 z-[999]"
             onClick={() => setSidebarOpen(false)}
           />
         )}
@@ -294,6 +299,7 @@ export default function HomePage() {
               events={events}
               selectedEventId={selectedEventId}
               onEventSelect={handleEventSelect}
+              onEventOpen={handleEventOpen}
               radiusKm={radiusKm}
               radiusCenter={radiusCenter}
               onRadiusCenterChange={setRadiusCenter}
