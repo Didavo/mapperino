@@ -1,19 +1,15 @@
 "use client";
 
-import { useState, useRef, useEffect } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import type { Source } from "@/src/types/event";
 
 interface FilterBarProps {
   fromDate: string;
   toDate: string;
-  selectedSourceIds: string[];
-  sources: Source[];
   radiusKm: number | null;
   searchQuery: string;
   onFromDateChange: (date: string) => void;
   onToDateChange: (date: string) => void;
-  onSourceIdsChange: (ids: string[]) => void;
   onRadiusChange: (km: number | null) => void;
   onSearchChange: (q: string) => void;
 }
@@ -46,44 +42,14 @@ const RADIUS_OPTIONS: { label: string; value: number | null }[] = [
 export default function FilterBar({
   fromDate,
   toDate,
-  selectedSourceIds,
-  sources,
   radiusKm,
   searchQuery,
   onFromDateChange,
   onToDateChange,
-  onSourceIdsChange,
   onRadiusChange,
   onSearchChange,
 }: FilterBarProps) {
-  const [open, setOpen] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
-  const dropdownRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    function handleClick(e: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
-        setOpen(false);
-      }
-    }
-    document.addEventListener("mousedown", handleClick);
-    return () => document.removeEventListener("mousedown", handleClick);
-  }, []);
-
-  function toggleSource(id: string) {
-    if (selectedSourceIds.includes(id)) {
-      onSourceIdsChange(selectedSourceIds.filter((s) => s !== id));
-    } else {
-      onSourceIdsChange([...selectedSourceIds, id]);
-    }
-  }
-
-  const sourceLabel =
-    selectedSourceIds.length === 0
-      ? "Alle Quellen"
-      : selectedSourceIds.length === 1
-      ? (sources.find((s) => String(s.id) === selectedSourceIds[0])?.name ?? "1 Quelle")
-      : `${selectedSourceIds.length} Quellen`;
 
   return (
     <header className="relative bg-white border-b border-gray-200 shadow-sm z-10">
@@ -149,7 +115,6 @@ export default function FilterBar({
           </div>
 
           <div className="h-5 w-px bg-gray-200" />
-          <div className="h-5 w-px bg-gray-200" />
 
           {/* Radius */}
           <div className="flex items-center gap-1">
@@ -166,56 +131,6 @@ export default function FilterBar({
                 </button>
               ))}
             </div>
-          </div>
-
-          <div className="h-5 w-px bg-gray-200" />
-
-          {/* Quelle */}
-          <div className="relative flex items-center gap-2" ref={dropdownRef}>
-            <span className="text-xs text-gray-500 hidden sm:block">Quelle:</span>
-            <button
-              onClick={() => setOpen((o) => !o)}
-              className="flex items-center gap-1.5 text-xs border border-gray-200 rounded-md px-2 py-1.5 bg-white text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[130px] justify-between"
-            >
-              <span className="truncate">{sourceLabel}</span>
-              <svg
-                viewBox="0 0 20 20"
-                fill="currentColor"
-                className={`w-3.5 h-3.5 flex-shrink-0 text-gray-400 transition-transform ${open ? "rotate-180" : ""}`}
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M5.23 7.21a.75.75 0 011.06.02L10 11.168l3.71-3.938a.75.75 0 111.08 1.04l-4.25 4.5a.75.75 0 01-1.08 0l-4.25-4.5a.75.75 0 01.02-1.06z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </button>
-
-            {open && (
-              <div className="absolute top-full left-0 mt-1 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[200px] py-1">
-                <label className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={selectedSourceIds.length === 0}
-                    onChange={() => onSourceIdsChange([])}
-                    className="rounded text-blue-600"
-                  />
-                  <span className="text-xs text-gray-700">Alle Quellen</span>
-                </label>
-                <div className="border-t border-gray-100 my-1" />
-                {sources.map((s) => (
-                  <label key={s.id} className="flex items-center gap-2 px-3 py-1.5 hover:bg-gray-50 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={selectedSourceIds.includes(String(s.id))}
-                      onChange={() => toggleSource(String(s.id))}
-                      className="rounded text-blue-600"
-                    />
-                    <span className="text-xs text-gray-700">{s.name}</span>
-                  </label>
-                ))}
-              </div>
-            )}
           </div>
         </div>
 
@@ -307,33 +222,6 @@ export default function FilterBar({
                 >
                   {label}
                 </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Quelle */}
-          <div className="flex flex-col gap-2">
-            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Quelle</span>
-            <div className="border border-gray-200 rounded-lg overflow-y-auto max-h-48">
-              <label className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100">
-                <input
-                  type="checkbox"
-                  checked={selectedSourceIds.length === 0}
-                  onChange={() => onSourceIdsChange([])}
-                  className="rounded text-blue-600"
-                />
-                <span className="text-sm text-gray-700">Alle Quellen</span>
-              </label>
-              {sources.map((s) => (
-                <label key={s.id} className="flex items-center gap-2 px-3 py-2.5 hover:bg-gray-50 cursor-pointer border-b border-gray-100 last:border-b-0">
-                  <input
-                    type="checkbox"
-                    checked={selectedSourceIds.includes(String(s.id))}
-                    onChange={() => toggleSource(String(s.id))}
-                    className="rounded text-blue-600"
-                  />
-                  <span className="text-sm text-gray-700">{s.name}</span>
-                </label>
               ))}
             </div>
           </div>

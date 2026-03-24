@@ -419,6 +419,7 @@ export default function MapView({
       touchPitch: false,
     });
 
+    map.touchZoomRotate.disableRotation();
     map.addControl(new maplibregl.NavigationControl({ showCompass: false }), "top-right");
     map.addControl(
       new maplibregl.GeolocateControl({

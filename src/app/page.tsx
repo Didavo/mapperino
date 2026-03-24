@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import FilterBar from "@/src/components/FilterBar";
 import EventSidebar from "@/src/components/EventSidebar";
 import MapView from "@/src/components/MapView";
-import type { Event, EventsApiResponse, Source } from "@/src/types/event";
+import type { Event, EventsApiResponse } from "@/src/types/event";
 
 function todayStr() {
   return new Date().toISOString().slice(0, 10);
@@ -58,11 +58,9 @@ export default function HomePage() {
   const [mounted, setMounted] = useState(false);
   const [initialCenter, setInitialCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [allEvents, setAllEvents] = useState<Event[]>([]);
-  const [sources, setSources] = useState<Source[]>([]);
   const [selectedEventId, setSelectedEventId] = useState<number | null>(null);
   const [fromDate, setFromDate] = useState(todayStr);
   const [toDate, setToDate] = useState(oneMonthLaterStr);
-  const [selectedSourceIds, setSelectedSourceIds] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [radiusKm, setRadiusKm] = useState<number | null>(null);
   const [radiusCenter, setRadiusCenter] = useState<{ lat: number; lng: number } | null>(null);
@@ -102,7 +100,6 @@ export default function HomePage() {
 
       const data: EventsApiResponse = await res.json();
       setAllEvents(data.events);
-      setSources(data.meta.sources);
     } catch (err) {
       console.error("Fehler beim Laden der Events:", err);
       setAllEvents([]);
@@ -145,16 +142,6 @@ export default function HomePage() {
   const events = useMemo(() => {
     let filtered = allEvents;
 
-    // Quellen-Filter
-    if (selectedSourceIds.length > 0) {
-      const selectedNames = new Set(
-        sources
-          .filter((s) => selectedSourceIds.includes(String(s.id)))
-          .map((s) => s.name)
-      );
-      filtered = filtered.filter((e) => selectedNames.has(e.source_name));
-    }
-
     // Radius-Filter
     if (radiusKm !== null && radiusCenter !== null) {
       filtered = filtered.filter((e) => {
@@ -172,7 +159,7 @@ export default function HomePage() {
     }
 
     return filtered;
-  }, [allEvents, sources, selectedSourceIds, radiusKm, radiusCenter, searchQuery]);
+  }, [allEvents, radiusKm, radiusCenter, searchQuery]);
 
   const handleEventSelect = useCallback((id: number) => {
     setSelectedEventId((prev) => (prev === id ? null : id));
@@ -188,8 +175,6 @@ export default function HomePage() {
       <FilterBar
         fromDate={fromDate}
         toDate={toDate}
-        selectedSourceIds={selectedSourceIds}
-        sources={sources}
         radiusKm={radiusKm}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
@@ -199,10 +184,6 @@ export default function HomePage() {
         }}
         onToDateChange={(date) => {
           setToDate(date);
-          setSelectedEventId(null);
-        }}
-        onSourceIdsChange={(ids) => {
-          setSelectedSourceIds(ids);
           setSelectedEventId(null);
         }}
         onRadiusChange={(km) => {
