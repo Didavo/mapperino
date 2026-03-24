@@ -133,7 +133,7 @@ function createEventElement(feature: GeoJSON.Feature, selected: boolean): HTMLEl
         month: "2-digit",
       })
     : "";
-  const timeStr = p.event_time ? ` · ${String(p.event_time).slice(0, 5)}` : "";
+  const timeStr = p.event_time ? String(p.event_time).slice(0, 5) : "";
   const desc = (p.description as string | null) ?? null;
   const rawImageUrl = (p.image_url as string | null) ?? null;
   // Nur https?:// URLs zulassen – verhindert javascript: / data: Injection
@@ -151,8 +151,11 @@ function createEventElement(feature: GeoJSON.Feature, selected: boolean): HTMLEl
     <div class="event-pin__label">
       ${imageUrl ? `<img class="event-pin__label-img" src="${esc(imageUrl)}" alt="" loading="lazy" />` : ""}
       <div class="event-pin__label-body">
+        <div class="event-pin__label-chips">
+          ${dateStr ? `<span class="event-pin__label-date-badge">${esc(dateStr)}</span>` : ""}
+          ${timeStr ? `<span class="event-pin__label-time">${esc(timeStr)}</span>` : ""}
+        </div>
         <span class="event-pin__label-title">${esc(String(p.title ?? ""))}</span>
-        <span class="event-pin__label-meta">${esc(dateStr + timeStr)}</span>
         ${desc ? `<p class="event-pin__label-desc">${esc(desc)}</p>` : ""}
       </div>
     </div>`;
@@ -471,6 +474,20 @@ export default function MapView({
       });
 
       map.on("render", updateMarkers);
+
+      // Selektion aufheben wenn auf leere Kartenfläche geklickt wird
+      map.on("click", () => {
+        if (selectedIdRef.current !== null) {
+          onEventSelectRef.current(selectedIdRef.current);
+        }
+      });
+
+      // Selektion aufheben sobald der User die Karte verschiebt
+      map.on("dragstart", () => {
+        if (selectedIdRef.current !== null) {
+          onEventSelectRef.current(selectedIdRef.current);
+        }
+      });
     });
 
     mapRef.current = map;

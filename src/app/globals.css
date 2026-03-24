@@ -112,26 +112,41 @@ body {
   position: absolute;
   bottom: calc(100% + 10px);
   left: 50%;
-  transform: translateX(-50%) translateY(6px);
+  transform-origin: bottom center;
+  transform: translateX(-50%) translateY(8px) scale(0.82);
   opacity: 0;
-  transition: opacity 0.18s ease, transform 0.18s ease;
+  transition: opacity 0.18s ease,
+              transform 0.42s cubic-bezier(0.34, 1.58, 0.64, 1);
   pointer-events: none;
   white-space: normal;
   background: #ffffff;
-  border-radius: 12px;
-  width: 220px;
+  border-radius: 14px;
+  width: 260px;
   overflow: hidden;
-  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.14), 0 1px 4px rgba(0, 0, 0, 0.08);
-  border: 1px solid rgba(0, 0, 0, 0.07);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
+  border: 1px solid rgba(0, 0, 0, 0.06);
   z-index: 20;
+}
+
+/* Farbiger Akzentstreifen oben */
+.event-pin__label::before {
+  content: '';
+  display: block;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 60%, #8b5cf6 100%);
 }
 
 .event-pin:hover .event-pin__label,
 .event-pin--selected .event-pin__label {
   opacity: 1;
-  transform: translateX(-50%) translateY(0);
+  transform: translateX(-50%) translateY(0) scale(1);
   pointer-events: auto;
   cursor: pointer;
+}
+
+/* Leichtes Aufhellen beim Hover über die Box */
+.event-pin__label:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.2), 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
 .event-pin__label-img {
@@ -142,24 +157,44 @@ body {
 }
 
 .event-pin__label-body {
-  padding: 8px 12px 10px;
+  padding: 9px 12px 11px;
+}
+
+/* Chips-Zeile: Datum-Badge + Uhrzeit */
+.event-pin__label-chips {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 5px;
+}
+
+.event-pin__label-date-badge {
+  display: inline-block;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 10px;
+  font-weight: 700;
+  color: #ffffff;
+  background: linear-gradient(135deg, #3b82f6, #6366f1);
+  border-radius: 5px;
+  padding: 2px 7px;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+.event-pin__label-time {
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  font-size: 10.5px;
+  color: #6b7280;
+  white-space: nowrap;
 }
 
 .event-pin__label-title {
   display: block;
   font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 12px;
+  font-size: 12.5px;
   font-weight: 600;
   color: #111827;
   line-height: 1.35;
-}
-
-.event-pin__label-meta {
-  display: block;
-  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
-  font-size: 10.5px;
-  color: #6b7280;
-  margin-top: 3px;
 }
 
 .event-pin__label-desc {
