@@ -128,12 +128,19 @@ body {
   z-index: 20;
 }
 
-/* Farbiger Akzentstreifen oben */
+/* Farbiger Akzentstreifen oben – animierter Gradient */
 .event-pin__label::before {
   content: '';
   display: block;
   height: 3px;
-  background: linear-gradient(90deg, #3b82f6 0%, #6366f1 60%, #8b5cf6 100%);
+  background: linear-gradient(90deg, #3b82f6, #6366f1, #8b5cf6, #ec4899, #6366f1, #3b82f6);
+  background-size: 300% 100%;
+  animation: stripe-flow 4s linear infinite;
+}
+
+@keyframes stripe-flow {
+  0%   { background-position: 0% 0%; }
+  100% { background-position: 300% 0%; }
 }
 
 .event-pin:hover .event-pin__label,
