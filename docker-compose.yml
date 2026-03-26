@@ -9,6 +9,7 @@ services:
     environment:
       NODE_ENV: production
       DATABASE_URL: ${DATABASE_URL}
+      RESEND_API_KEY: ${RESEND_API_KEY}
     networks:
       - web           # Caddy → Mapperino
       - scraper_db    # Mapperino → event_scraper_db
