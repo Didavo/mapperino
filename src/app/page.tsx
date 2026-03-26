@@ -67,6 +67,7 @@ export default function HomePage() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+  const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -170,6 +171,22 @@ export default function HomePage() {
     setSidebarOpen(true);
   }, []);
 
+  const handleLogoClick = useCallback(() => {
+    const fly = (center: { lat: number; lng: number }) =>
+      setFlyTarget({ lat: center.lat, lng: center.lng, zoom: 13 });
+
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => fly({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+        () => { const s = readRadiusCenterCookie(); if (s) fly(s); },
+        { timeout: 5000 }
+      );
+    } else {
+      const s = readRadiusCenterCookie();
+      if (s) fly(s);
+    }
+  }, []);
+
   return (
     <div className="flex flex-col h-[100dvh] overflow-hidden bg-gray-50">
       <FilterBar
@@ -191,6 +208,7 @@ export default function HomePage() {
           if (km === null) setRadiusCenter(null);
           setSelectedEventId(null);
         }}
+        onLogoClick={handleLogoClick}
       />
 
       {/* ── Mobile: Aktionsleiste ────────────────────────────────────────────── */}
@@ -285,6 +303,7 @@ export default function HomePage() {
               radiusCenter={radiusCenter}
               onRadiusCenterChange={setRadiusCenter}
               initialCenter={initialCenter ?? undefined}
+              flyTarget={flyTarget ?? undefined}
             />
           )}
 

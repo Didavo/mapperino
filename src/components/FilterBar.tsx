@@ -12,6 +12,7 @@ interface FilterBarProps {
   onToDateChange: (date: string) => void;
   onRadiusChange: (km: number | null) => void;
   onSearchChange: (q: string) => void;
+  onLogoClick?: () => void;
 }
 
 function today(): string {
@@ -48,6 +49,7 @@ export default function FilterBar({
   onToDateChange,
   onRadiusChange,
   onSearchChange,
+  onLogoClick,
 }: FilterBarProps) {
   const [mobileOpen, setMobileOpen] = useState(false);
 
@@ -57,7 +59,12 @@ export default function FilterBar({
       <div className="flex items-center gap-3 px-4 py-2.5">
         {/* Logo */}
         <div className="flex items-center gap-2 mr-3">
-          <span className="text-lg font-bold text-blue-600 tracking-tight">Mapperino</span>
+          <button
+            onClick={onLogoClick}
+            className="text-lg font-bold text-blue-600 tracking-tight hover:text-blue-700 transition-colors"
+          >
+            beckstar.de
+          </button>
           <span className="hidden sm:block text-xs text-gray-400 font-normal">
             Events in der Region
           </span>

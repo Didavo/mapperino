@@ -205,6 +205,7 @@ interface MapViewProps {
   radiusCenter: { lat: number; lng: number } | null;
   onRadiusCenterChange: (center: { lat: number; lng: number }) => void;
   initialCenter?: { lat: number; lng: number };
+  flyTarget?: { lat: number; lng: number; zoom: number };
 }
 
 // ── Komponente ────────────────────────────────────────────────────────────────
@@ -217,6 +218,7 @@ export default function MapView({
   radiusCenter,
   onRadiusCenterChange,
   initialCenter,
+  flyTarget,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<maplibregl.Map | null>(null);
@@ -595,6 +597,17 @@ export default function MapView({
       duration: 600,
     });
   }, [selectedEventId, events]);
+
+  // ── Logo-Klick: Karte zum Standort fliegen ────────────────────────────────
+  useEffect(() => {
+    const map = mapRef.current;
+    if (!map || !flyTarget) return;
+    map.flyTo({
+      center: [flyTarget.lng, flyTarget.lat],
+      zoom: flyTarget.zoom,
+      duration: 1200,
+    });
+  }, [flyTarget]);
 
   return <div ref={containerRef} className="w-full h-full" />;
 }
