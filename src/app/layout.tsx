@@ -8,7 +8,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Mapperino – Events in der Region",
+  title: "beckstar.de – Events in der Region",
   description:
     "Veranstaltungsübersicht für Hohenlohekreis, Main-Tauber-Kreis und Schwäbisch Hall",
   icons: {
