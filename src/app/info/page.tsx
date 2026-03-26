@@ -53,12 +53,20 @@ export default function InfoPage() {
               Events in der Region
             </span>
           </div>
-          <Link
-            href="/info"
-            className="ml-auto text-xs font-medium text-blue-600 px-2 py-1.5"
-          >
-            Info
-          </Link>
+          <div className="ml-auto flex items-center gap-1">
+            <Link
+              href="/info"
+              className="text-xs font-medium text-blue-600 px-2 py-1.5"
+            >
+              Info
+            </Link>
+            <Link
+              href="/impressum"
+              className="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors px-2 py-1.5"
+            >
+              Impressum
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -90,7 +98,7 @@ export default function InfoPage() {
           </section>
 
           {/* ── Kontaktformular ─────────────────────────────────────────────── */}
-          <section>
+          <section id="kontakt">
             <h2 className="text-sm font-semibold text-gray-700 uppercase tracking-wide mb-4">
               Kontakt & Feedback
             </h2>

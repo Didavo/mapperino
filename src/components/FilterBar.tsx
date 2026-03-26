@@ -169,13 +169,21 @@ export default function FilterBar({
           </button>
         </div>
 
-        {/* Desktop: Info */}
-        <Link
-          href="/info"
-          className="hidden sm:block ml-auto text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors px-2 py-1.5"
-        >
-          Info
-        </Link>
+        {/* Desktop: Info + Impressum */}
+        <div className="hidden sm:flex items-center gap-1 ml-auto">
+          <Link
+            href="/info"
+            className="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors px-2 py-1.5"
+          >
+            Info
+          </Link>
+          <Link
+            href="/impressum"
+            className="text-xs font-medium text-gray-500 hover:text-blue-600 transition-colors px-2 py-1.5"
+          >
+            Impressum
+          </Link>
+        </div>
       </div>
 
       {/* ── Mobile-Filtermenü ────────────────────────────────────────────────── */}
