@@ -3,17 +3,21 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import FilterBar from "@/src/components/FilterBar";
 import EventSidebar from "@/src/components/EventSidebar";
-import MapView from "@/src/components/MapView";
+import MapView, { type MapBounds } from "@/src/components/MapView";
 import type { Event, EventsApiResponse } from "@/src/types/event";
 
+function localDateStr(d: Date = new Date()) {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function todayStr() {
-  return new Date().toISOString().slice(0, 10);
+  return localDateStr();
 }
 
 function oneMonthLaterStr() {
   const d = new Date();
   d.setMonth(d.getMonth() + 1);
-  return d.toISOString().slice(0, 10);
+  return localDateStr(d);
 }
 
 function haversineKm(
@@ -68,6 +72,7 @@ export default function HomePage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
+  const [mapBounds, setMapBounds] = useState<MapBounds | null>(null);
   const mobileSearchRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -153,6 +158,19 @@ export default function HomePage() {
       });
     }
 
+    // Viewport-Filter
+    if (mapBounds) {
+      filtered = filtered.filter((e) => {
+        if (e.latitude === null || e.longitude === null) return false;
+        return (
+          e.latitude  <= mapBounds.north &&
+          e.latitude  >= mapBounds.south &&
+          e.longitude >= mapBounds.west  &&
+          e.longitude <= mapBounds.east
+        );
+      });
+    }
+
     // Titel-Suche
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -160,7 +178,7 @@ export default function HomePage() {
     }
 
     return filtered;
-  }, [allEvents, radiusKm, radiusCenter, searchQuery]);
+  }, [allEvents, radiusKm, radiusCenter, mapBounds, searchQuery]);
 
   const handleEventSelect = useCallback((id: number) => {
     setSelectedEventId((prev) => (prev === id ? null : id));
@@ -302,6 +320,7 @@ export default function HomePage() {
               radiusKm={radiusKm}
               radiusCenter={radiusCenter}
               onRadiusCenterChange={setRadiusCenter}
+              onBoundsChange={setMapBounds}
               initialCenter={initialCenter ?? undefined}
               flyTarget={flyTarget ?? undefined}
             />

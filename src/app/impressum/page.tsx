@@ -2,7 +2,7 @@ import Link from "next/link";
 
 export default function ImpressumPage() {
   return (
-    <div className="flex flex-col min-h-[100dvh] bg-gray-50">
+    <div className="flex flex-col min-h-[100dvh] bg-gray-50 overflow-y-auto">
       {/* ── Navigationsleiste ───────────────────────────────────────────────── */}
       <header className="bg-white border-b border-gray-200 shadow-sm z-10">
         <div className="flex items-center gap-3 px-4 py-2.5">

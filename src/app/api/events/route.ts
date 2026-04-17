@@ -87,7 +87,7 @@ export async function GET(req: NextRequest) {
       AND l.longitude IS NOT NULL
     WHERE ${whereClause}
     ORDER BY e.event_date ASC, e.event_time ASC NULLS LAST
-    LIMIT 500`,
+    LIMIT 2000`,
     params
   );
 

@@ -196,6 +196,13 @@ interface MarkerEntry {
 }
 
 // ── Props ─────────────────────────────────────────────────────────────────────
+export interface MapBounds {
+  north: number;
+  south: number;
+  east: number;
+  west: number;
+}
+
 interface MapViewProps {
   events: Event[];
   selectedEventId: number | null;
@@ -204,6 +211,7 @@ interface MapViewProps {
   radiusKm: number | null;
   radiusCenter: { lat: number; lng: number } | null;
   onRadiusCenterChange: (center: { lat: number; lng: number }) => void;
+  onBoundsChange?: (bounds: MapBounds) => void;
   initialCenter?: { lat: number; lng: number };
   flyTarget?: { lat: number; lng: number; zoom: number };
 }
@@ -217,6 +225,7 @@ export default function MapView({
   radiusKm,
   radiusCenter,
   onRadiusCenterChange,
+  onBoundsChange,
   initialCenter,
   flyTarget,
 }: MapViewProps) {
@@ -237,12 +246,14 @@ export default function MapView({
   const selectedIdRef = useRef(selectedEventId);
   const eventsRef = useRef(events);
   const onRadiusCenterChangeRef = useRef(onRadiusCenterChange);
+  const onBoundsChangeRef = useRef(onBoundsChange);
 
   onEventSelectRef.current = onEventSelect;
   onEventOpenRef.current = onEventOpen;
   selectedIdRef.current = selectedEventId;
   eventsRef.current = events;
   onRadiusCenterChangeRef.current = onRadiusCenterChange;
+  onBoundsChangeRef.current = onBoundsChange;
   radiusKmRef.current = radiusKm;
 
   // ── Popup schließen ────────────────────────────────────────────────────────
@@ -476,6 +487,23 @@ export default function MapView({
       });
 
       map.on("render", updateMarkers);
+
+      // Bounds-Callback (debounced) bei jeder Kartenbewegung
+      let boundsTimer: ReturnType<typeof setTimeout> | null = null;
+      const fireBounds = () => {
+        if (boundsTimer) clearTimeout(boundsTimer);
+        boundsTimer = setTimeout(() => {
+          const b = map.getBounds();
+          onBoundsChangeRef.current?.({
+            north: b.getNorth(),
+            south: b.getSouth(),
+            east: b.getEast(),
+            west: b.getWest(),
+          });
+        }, 150);
+      };
+      map.on("moveend", fireBounds);
+      fireBounds(); // Initiale Bounds direkt nach dem Laden feuern
 
       // Selektion aufheben wenn auf leere Kartenfläche geklickt wird
       map.on("click", () => {
