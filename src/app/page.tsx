@@ -102,7 +102,10 @@ export default function HomePage() {
       if (toDate) params.set("to", toDate);
 
       const res = await fetch(`/api/events?${params.toString()}`);
-      if (!res.ok) throw new Error("API-Fehler");
+      if (!res.ok) {
+        const body = await res.text().catch(() => "(kein Body)");
+        throw new Error(`API-Fehler ${res.status}: ${body}`);
+      }
 
       const data: EventsApiResponse = await res.json();
       setAllEvents(data.events);

@@ -95,6 +95,11 @@ function esc(s: string): string {
 
 // ── Popup-Inhalt für gestapelte Events ───────────────────────────────────────
 function buildStackPopupHTML(features: GeoJSON.Feature[]): string {
+  const todayStr = (() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+  })();
+
   const items = [...features]
     .sort((a, b) => {
       const da = a.properties?.event_date ?? "";
@@ -107,20 +112,37 @@ function buildStackPopupHTML(features: GeoJSON.Feature[]): string {
     })
     .map((f) => {
       const p = f.properties ?? {};
-      const dateStr = p.event_date
-        ? new Date(p.event_date as string).toLocaleDateString("de-DE", {
-            day: "2-digit",
-            month: "2-digit",
-          })
-        : "";
-      const timeStr = p.event_time ? ` · ${String(p.event_time).slice(0, 5)}` : "";
+      const eventDate = String(p.event_date ?? "");
+      const isToday = eventDate === todayStr;
+      const isThisWeek = !isToday && (() => {
+        const diff = new Date(eventDate + "T00:00:00").getTime() - new Date(todayStr + "T00:00:00").getTime();
+        return diff >= 0 && diff < 7 * 24 * 60 * 60 * 1000;
+      })();
+
+      const dateLabel = isToday
+        ? "Heute"
+        : eventDate
+          ? new Date(eventDate + "T00:00:00").toLocaleDateString("de-DE", { weekday: "short", day: "2-digit", month: "short" })
+          : "";
+      const badgeClass = isToday ? "stack-popup__badge--today" : isThisWeek ? "stack-popup__badge--week" : "stack-popup__badge--default";
+      const timeStr = p.event_time ? String(p.event_time).slice(0, 5) + " Uhr" : "";
+
       return `<button class="stack-popup__item" data-event-id="${esc(String(p.id ?? ""))}">
+        <div class="stack-popup__item-header">
+          ${dateLabel ? `<span class="stack-popup__badge ${badgeClass}">${esc(dateLabel)}</span>` : ""}
+          ${timeStr ? `<span class="stack-popup__time">${esc(timeStr)}</span>` : ""}
+        </div>
         <span class="stack-popup__title">${esc(String(p.title ?? ""))}</span>
-        <span class="stack-popup__meta">${esc(dateStr + timeStr)}</span>
       </button>`;
     })
     .join("");
-  return `<div class="stack-popup">${items}</div>`;
+
+  return `<div class="stack-popup">
+    <div class="stack-popup__header">
+      <span class="stack-popup__header-label">${features.length} Events an diesem Ort</span>
+    </div>
+    <div class="stack-popup__list">${items}</div>
+  </div>`;
 }
 
 // ── Event-Pin HTML-Element ────────────────────────────────────────────────────
@@ -276,7 +298,7 @@ export default function MapView({
       const popup = new maplibregl.Popup({
         closeButton: true,
         closeOnClick: true,
-        maxWidth: "260px",
+        maxWidth: "300px",
         offset: 12,
       })
         .setLngLat(coords)
@@ -344,7 +366,8 @@ export default function MapView({
         src
           .getClusterExpansionZoom(feature.properties?.cluster_id as number)
           .then((zoom) => {
-            if (zoom != null && zoom > map.getZoom()) {
+            const currentZoom = map.getZoom();
+            if (zoom != null && zoom > currentZoom && currentZoom < 11) {
               closePopupRef.current();
               map.easeTo({ center: coords, zoom });
             } else {
@@ -500,7 +523,7 @@ export default function MapView({
             east: b.getEast(),
             west: b.getWest(),
           });
-        }, 150);
+        }, 350);
       };
       map.on("moveend", fireBounds);
       fireBounds(); // Initiale Bounds direkt nach dem Laden feuern
@@ -543,8 +566,6 @@ export default function MapView({
     if (!source) return;
 
     closePopup();
-    for (const { marker } of Array.from(markersRef.current.values())) marker.remove();
-    markersRef.current.clear();
     source.setData(buildGeoJSON(events));
   }, [events, closePopup]);
 
