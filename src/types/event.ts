@@ -34,6 +34,4 @@ export interface EventsApiResponse {
     sources: Source[];
     categories: Category[];
   };
-  /** Wird gesetzt wenn keine DB erreichbar ist und Beispieldaten geliefert werden */
-  _mock?: boolean;
 }
