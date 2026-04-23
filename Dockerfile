@@ -15,6 +15,8 @@ COPY . .
 
 # Build with standalone output (defined in next.config.ts)
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_UMAMI_WEBSITE_ID
+ENV NEXT_PUBLIC_UMAMI_WEBSITE_ID=${NEXT_PUBLIC_UMAMI_WEBSITE_ID}
 RUN npm run build
 
 # ─── Stage 3: runner ──────────────────────────────────────────────────────────

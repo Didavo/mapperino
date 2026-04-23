@@ -3,6 +3,8 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_UMAMI_WEBSITE_ID: ${NEXT_PUBLIC_UMAMI_WEBSITE_ID}
     image: mapperino:latest
     container_name: mapperino
     # Kein direktes Port-Binding – Caddy übernimmt den externen Zugriff
