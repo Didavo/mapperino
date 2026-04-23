@@ -20,10 +20,10 @@ const securityHeaders = [
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      `script-src 'self' 'unsafe-inline'${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
+      `script-src 'self' 'unsafe-inline' https://analytics.beckstar.de${process.env.NODE_ENV === "development" ? " 'unsafe-eval'" : ""}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: https:",
-      "connect-src 'self' https://tiles.openfreemap.org https://*.openfreemap.org",
+      "connect-src 'self' https://tiles.openfreemap.org https://*.openfreemap.org https://analytics.beckstar.de",
       "font-src 'self'",
       "worker-src blob:",
       "frame-ancestors 'none'",
