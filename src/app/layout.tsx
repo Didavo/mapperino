@@ -25,14 +25,11 @@ export default function RootLayout({
   return (
     <html lang="de">
       <body className="antialiased">{children}</body>
-      {process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID && (
-        <Script
-          defer
-          src={`${process.env.NEXT_PUBLIC_UMAMI_URL}/script.js`}
-          data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
-          strategy="afterInteractive"
-        />
-      )}
+      <Script
+        src="https://analytics.beckstar.de/script.js"
+        data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+        strategy="afterInteractive"
+      />
     </html>
   );
 }
