@@ -2,16 +2,20 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import type { Category } from "@/src/types/event";
 
 interface FilterBarProps {
   fromDate: string;
   toDate: string;
   radiusKm: number | null;
   searchQuery: string;
+  categories: Category[];
+  selectedCategoryIds: number[];
   onFromDateChange: (date: string) => void;
   onToDateChange: (date: string) => void;
   onRadiusChange: (km: number | null) => void;
   onSearchChange: (q: string) => void;
+  onCategoryChange: (ids: number[]) => void;
   onLogoClick?: () => void;
 }
 
@@ -45,12 +49,22 @@ export default function FilterBar({
   toDate,
   radiusKm,
   searchQuery,
+  categories,
+  selectedCategoryIds,
   onFromDateChange,
   onToDateChange,
   onRadiusChange,
   onSearchChange,
+  onCategoryChange,
   onLogoClick,
 }: FilterBarProps) {
+  function toggleCategory(id: number) {
+    onCategoryChange(
+      selectedCategoryIds.includes(id)
+        ? selectedCategoryIds.filter((c) => c !== id)
+        : [...selectedCategoryIds, id]
+    );
+  }
   const [mobileOpen, setMobileOpen] = useState(false);
 
   return (
@@ -139,6 +153,27 @@ export default function FilterBar({
               ))}
             </div>
           </div>
+          {/* Kategorien */}
+          {categories.length > 0 && (
+            <>
+              <div className="h-5 w-px bg-gray-200" />
+              <div className="flex items-center gap-1.5 overflow-x-auto max-w-xs scrollbar-none">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`shrink-0 px-2.5 py-1 text-xs font-medium rounded-full border transition-colors
+                      ${selectedCategoryIds.includes(cat.id)
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600"
+                      }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </>
+          )}
         </div>
 
         {/* ── Mobile: Info + Burger ────────────────────────────────────────── */}
@@ -240,6 +275,28 @@ export default function FilterBar({
               ))}
             </div>
           </div>
+
+          {/* Kategorien */}
+          {categories.length > 0 && (
+            <div className="flex flex-col gap-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Kategorien</span>
+              <div className="flex flex-wrap gap-1.5">
+                {categories.map((cat) => (
+                  <button
+                    key={cat.id}
+                    onClick={() => toggleCategory(cat.id)}
+                    className={`px-2.5 py-1.5 text-xs font-medium rounded-full border transition-colors
+                      ${selectedCategoryIds.includes(cat.id)
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-white text-gray-600 border-gray-200"
+                      }`}
+                  >
+                    {cat.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </header>

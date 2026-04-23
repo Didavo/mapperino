@@ -1,3 +1,8 @@
+export interface Category {
+  id: number;
+  name: string;
+}
+
 export interface Event {
   id: number;
   title: string;
@@ -14,6 +19,7 @@ export interface Event {
   longitude: number | null;
   description?: string | null;
   image_url?: string | null;
+  categories: Category[];
 }
 
 export interface Source {
@@ -26,6 +32,7 @@ export interface EventsApiResponse {
   meta: {
     total: number;
     sources: Source[];
+    categories: Category[];
   };
   /** Wird gesetzt wenn keine DB erreichbar ist und Beispieldaten geliefert werden */
   _mock?: boolean;

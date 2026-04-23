@@ -1,4 +1,21 @@
-import type { Event } from "@/src/types/event";
+import type { Event, Category } from "@/src/types/event";
+
+const CATEGORY_COLORS = [
+  "bg-purple-100 text-purple-700",
+  "bg-teal-100 text-teal-700",
+  "bg-orange-100 text-orange-700",
+  "bg-pink-100 text-pink-700",
+  "bg-cyan-100 text-cyan-700",
+  "bg-indigo-100 text-indigo-700",
+  "bg-lime-100 text-lime-700",
+  "bg-rose-100 text-rose-700",
+];
+
+function categoryColor(cat: Category): string {
+  let hash = 0;
+  for (const ch of cat.name) hash = (hash * 31 + ch.charCodeAt(0)) & 0xffff;
+  return CATEGORY_COLORS[hash % CATEGORY_COLORS.length];
+}
 
 interface EventCardProps {
   event: Event;
@@ -99,6 +116,20 @@ export default function EventCard({ event, isSelected, onClick }: EventCardProps
             <circle cx="12" cy="9" r="2.5" />
           </svg>
           <span className="text-[11px] text-gray-500 truncate">{loc}</span>
+        </div>
+      )}
+
+      {/* Categories */}
+      {event.categories?.length > 0 && (
+        <div className="mt-2 flex flex-wrap gap-1">
+          {event.categories.map((cat) => (
+            <span
+              key={cat.id}
+              className={`text-[10px] font-medium px-1.5 py-0.5 rounded-full ${categoryColor(cat)}`}
+            >
+              {cat.name}
+            </span>
+          ))}
         </div>
       )}
 

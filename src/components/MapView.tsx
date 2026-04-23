@@ -4,13 +4,30 @@ import { useEffect, useRef, useCallback } from "react";
 import maplibregl from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import type { Event } from "@/src/types/event";
+import { CATEGORY_CONFIG, DEFAULT_PIN_COLOR, getCategoryConfig } from "@/src/lib/category-config";
 
 // ── Kartenstil ────────────────────────────────────────────────────────────────
 const OPENFREEMAP_STYLE = "https://tiles.openfreemap.org/styles/liberty";
 const DEFAULT_CENTER: [number, number] = [9.75, 49.3];
 const DEFAULT_ZOOM = 9;
 
-const PIN_COLOR = "#ef4444";
+const PIN_COLOR = DEFAULT_PIN_COLOR;
+
+function buildPinHTML(color: string, emoji: string): string {
+  if (emoji) {
+    // Kategorie vorhanden: nur das Emoji anzeigen, kein Pin
+    return `<div class="event-pin__svg" aria-hidden="true">
+      <span class="event-pin__emoji" aria-hidden="true">${emoji}</span>
+    </div>`;
+  }
+  // Kein Kategorie-Emoji: klassischer farbiger Pin
+  return `<div class="event-pin__svg" aria-hidden="true">
+    <svg width="26" height="35" viewBox="0 0 26 35" style="display:block">
+      <path d="M13 0C5.82 0 0 5.82 0 13C0 21.5 13 35 13 35C13 35 26 21.5 26 13C26 5.82 20.18 0 13 0Z" fill="${esc(color)}"/>
+      <circle cx="13" cy="13" r="7" fill="white" fill-opacity="0.28"/>
+    </svg>
+  </div>`;
+}
 
 // ── GeoJSON bauen ─────────────────────────────────────────────────────────────
 function buildGeoJSON(events: Event[]): GeoJSON.FeatureCollection {
@@ -30,6 +47,7 @@ function buildGeoJSON(events: Event[]): GeoJSON.FeatureCollection {
           source_name: e.source_name,
           description: e.description ?? null,
           image_url: e.image_url ?? null,
+          category: e.categories?.[0]?.name ?? null,
         },
       })),
   };
@@ -69,19 +87,36 @@ function buildCircleGeoJSON(
 }
 
 // ── Cluster/Stack-Kreis SVG ───────────────────────────────────────────────────
-function buildClusterSVG(count: number): string {
+function buildClusterSVG(count: number, color: string = PIN_COLOR): string {
   const size = count > 30 ? 50 : count > 8 ? 42 : 34;
   const cx = size / 2;
   const fs = count > 99 ? 11 : count > 9 ? 13 : 15;
   return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" style="display:block">
-    <circle cx="${cx}" cy="${cx}" r="${cx - 1}" fill="${PIN_COLOR}" opacity="0.18"/>
-    <circle cx="${cx}" cy="${cx}" r="${cx - 5}" fill="${PIN_COLOR}"/>
+    <circle cx="${cx}" cy="${cx}" r="${cx - 1}" fill="${esc(color)}" opacity="0.18"/>
+    <circle cx="${cx}" cy="${cx}" r="${cx - 5}" fill="${esc(color)}"/>
     <text x="${cx}" y="${cx + fs * 0.38}"
       text-anchor="middle"
       font-family="system-ui,-apple-system,'Segoe UI',sans-serif"
       font-size="${fs}" font-weight="700" fill="white"
     >${count}</text>
   </svg>`;
+}
+
+function getDominantCategoryColor(features: GeoJSON.Feature[]): string {
+  const counts = new Map<string, number>();
+  for (const f of features) {
+    const cat = f.properties?.category as string | null;
+    if (cat) counts.set(cat, (counts.get(cat) ?? 0) + 1);
+  }
+  if (counts.size === 0) return PIN_COLOR;
+  const dominant = Array.from(counts.entries()).sort((a, b) => b[1] - a[1])[0][0];
+  return CATEGORY_CONFIG[dominant]?.color ?? PIN_COLOR;
+}
+
+function applyClusterColor(el: HTMLElement, color: string) {
+  el.querySelectorAll<SVGCircleElement>("circle").forEach((c) =>
+    c.setAttribute("fill", color)
+  );
 }
 
 // ── HTML escaping ──────────────────────────────────────────────────────────────
@@ -162,14 +197,17 @@ function createEventElement(feature: GeoJSON.Feature, selected: boolean): HTMLEl
   const imageUrl =
     rawImageUrl && /^https?:\/\//.test(rawImageUrl) ? rawImageUrl : null;
 
+  const categoryName = (p.category as string | null) ?? null;
+  const { color, emoji } = getCategoryConfig(categoryName);
+
   const el = document.createElement("div");
-  el.className = `event-pin${selected ? " event-pin--selected" : ""}`;
+  el.className = `event-pin${selected ? " event-pin--selected" : ""}${emoji ? " event-pin--icon" : ""}`;
   el.dataset.eventId = String(p.id);
+  el.style.setProperty("--pin-color", color);
 
   el.innerHTML = `
-    <img class="event-pin__svg" src="/marker.png"
-      width="32" height="32" aria-hidden="true"
-      style="display:block" />
+    <div class="event-pin__ring"></div>
+    ${buildPinHTML(color, emoji)}
     <div class="event-pin__label">
       ${imageUrl ? `<img class="event-pin__label-img" src="${esc(imageUrl)}" alt="" loading="lazy" />` : ""}
       <div class="event-pin__label-body">
@@ -186,10 +224,10 @@ function createEventElement(feature: GeoJSON.Feature, selected: boolean): HTMLEl
 }
 
 // ── Cluster/Stack HTML-Element ────────────────────────────────────────────────
-function createClusterElement(count: number): HTMLElement {
+function createClusterElement(count: number, color: string = PIN_COLOR): HTMLElement {
   const el = document.createElement("div");
   el.className = "cluster-donut";
-  el.innerHTML = buildClusterSVG(count);
+  el.innerHTML = buildClusterSVG(count, color);
   return el;
 }
 
@@ -360,6 +398,14 @@ export default function MapView({
       const coords = (feature.geometry as GeoJSON.Point).coordinates as [number, number];
       const el = createClusterElement(feature.properties?.point_count as number);
 
+      // Dominante Kategorie async ermitteln und Cluster einfärben
+      const src2 = map.getSource("events") as maplibregl.GeoJSONSource;
+      src2.getClusterLeaves(feature.properties?.cluster_id as number, Infinity, 0)
+        .then((leaves) => {
+          const color = getDominantCategoryColor(leaves as GeoJSON.Feature[]);
+          applyClusterColor(el, color);
+        });
+
       el.addEventListener("click", (e) => {
         e.stopPropagation();
         const src = map.getSource("events") as maplibregl.GeoJSONSource;
@@ -421,7 +467,7 @@ export default function MapView({
         if (markersRef.current.has(markerId)) continue;
 
         const coords = (group[0].geometry as GeoJSON.Point).coordinates as [number, number];
-        const el = createClusterElement(group.length);
+        const el = createClusterElement(group.length, getDominantCategoryColor(group));
 
         el.addEventListener("click", (e) => {
           e.stopPropagation();
@@ -565,7 +611,6 @@ export default function MapView({
     const source = map.getSource("events") as maplibregl.GeoJSONSource | undefined;
     if (!source) return;
 
-    closePopup();
     source.setData(buildGeoJSON(events));
   }, [events, closePopup]);
 

@@ -4,7 +4,8 @@ import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import FilterBar from "@/src/components/FilterBar";
 import EventSidebar from "@/src/components/EventSidebar";
 import MapView, { type MapBounds } from "@/src/components/MapView";
-import type { Event, EventsApiResponse } from "@/src/types/event";
+import type { Event, Category, EventsApiResponse } from "@/src/types/event";
+import { CATEGORY_CONFIG } from "@/src/lib/category-config";
 
 function localDateStr(d: Date = new Date()) {
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
@@ -69,6 +70,8 @@ export default function HomePage() {
   const [radiusKm, setRadiusKm] = useState<number | null>(null);
   const [radiusCenter, setRadiusCenter] = useState<{ lat: number; lng: number } | null>(null);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [selectedCategoryIds, setSelectedCategoryIds] = useState<number[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
   const [flyTarget, setFlyTarget] = useState<{ lat: number; lng: number; zoom: number } | null>(null);
@@ -109,6 +112,7 @@ export default function HomePage() {
 
       const data: EventsApiResponse = await res.json();
       setAllEvents(data.events);
+      setCategories(data.meta.categories ?? []);
     } catch (err) {
       console.error("Fehler beim Laden der Events:", err);
       setAllEvents([]);
@@ -174,6 +178,13 @@ export default function HomePage() {
       });
     }
 
+    // Kategorie-Filter
+    if (selectedCategoryIds.length > 0) {
+      filtered = filtered.filter((e) =>
+        e.categories?.some((c) => selectedCategoryIds.includes(c.id))
+      );
+    }
+
     // Titel-Suche
     if (searchQuery.trim()) {
       const q = searchQuery.trim().toLowerCase();
@@ -181,7 +192,7 @@ export default function HomePage() {
     }
 
     return filtered;
-  }, [allEvents, radiusKm, radiusCenter, mapBounds, searchQuery]);
+  }, [allEvents, radiusKm, radiusCenter, mapBounds, selectedCategoryIds, searchQuery]);
 
   const handleEventSelect = useCallback((id: number) => {
     setSelectedEventId((prev) => (prev === id ? null : id));
@@ -229,6 +240,9 @@ export default function HomePage() {
           if (km === null) setRadiusCenter(null);
           setSelectedEventId(null);
         }}
+        categories={categories}
+        selectedCategoryIds={selectedCategoryIds}
+        onCategoryChange={setSelectedCategoryIds}
         onLogoClick={handleLogoClick}
       />
 
@@ -327,6 +341,55 @@ export default function HomePage() {
               initialCenter={initialCenter ?? undefined}
               flyTarget={flyTarget ?? undefined}
             />
+          )}
+
+          {/* ── Kategorie-Pills am unteren Kartenrand ───────────────────── */}
+          {categories.length > 0 && (
+            <div className="absolute bottom-0 left-0 right-0 z-10 pointer-events-none">
+              <div className="flex gap-2 overflow-x-auto px-3 py-2.5 hide-scrollbar pointer-events-auto">
+                {selectedCategoryIds.length > 0 && (
+                  <button
+                    onClick={() => setSelectedCategoryIds([])}
+                    className="shrink-0 flex items-center gap-1 px-2.5 py-1.5 rounded-full text-xs font-medium bg-white/90 backdrop-blur border border-gray-300 text-gray-600 shadow-sm hover:bg-gray-50 transition-colors"
+                  >
+                    ✕ Alle
+                  </button>
+                )}
+                {categories.filter((cat) => [
+                    "Feste & Feiern",
+                    "Märkte & Flohmärkte",
+                    "Ausstellung & Kunst",
+                    "Vortrag & Führung",
+                  ].includes(cat.name)).map((cat) => {
+                  const color = CATEGORY_CONFIG[cat.name]?.color ?? "#6b7280";
+                  const isSelected = selectedCategoryIds.includes(cat.id);
+                  return (
+                    <button
+                      key={cat.id}
+                      onClick={() =>
+                        setSelectedCategoryIds((prev) =>
+                          prev.includes(cat.id)
+                            ? prev.filter((id) => id !== cat.id)
+                            : [...prev, cat.id]
+                        )
+                      }
+                      className="shrink-0 flex items-center gap-1.5 px-2.5 py-1.5 rounded-full text-xs font-medium shadow-sm border transition-all"
+                      style={
+                        isSelected
+                          ? { backgroundColor: color, borderColor: color, color: "#fff" }
+                          : { backgroundColor: "rgba(255,255,255,0.9)", borderColor: "#e5e7eb", color: "#374151" }
+                      }
+                    >
+                      <span
+                        className="w-2 h-2 rounded-full shrink-0 transition-opacity"
+                        style={{ backgroundColor: isSelected ? "#fff" : color, opacity: isSelected ? 0.7 : 1 }}
+                      />
+                      {cat.name}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
           )}
 
           {mounted && !isLoading && events.length === 0 && (

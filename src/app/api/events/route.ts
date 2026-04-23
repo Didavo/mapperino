@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { query } from "@/src/lib/db";
 import { checkRateLimit } from "@/src/lib/rate-limit";
-import type { Event, Source } from "@/src/types/event";
+import type { Event, Source, Category } from "@/src/types/event";
 
 export const dynamic = "force-dynamic";
 
@@ -68,32 +68,48 @@ export async function GET(req: NextRequest) {
     `SELECT
       e.id,
       e.title,
-      e.event_date::text                                         AS event_date,
-      e.event_time::text                                         AS event_time,
-      e.event_end_date::text                                     AS event_end_date,
-      e.event_end_time::text                                     AS event_end_time,
+      e.event_date::text                                          AS event_date,
+      e.event_time::text                                          AS event_time,
+      e.event_end_date::text                                      AS event_end_date,
+      e.event_end_time::text                                      AS event_end_time,
       e.url,
       e.raw_location,
-      s.name                                                     AS source_name,
+      s.name                                                      AS source_name,
       l.display_name,
       l.city,
-      CASE WHEN l.status = 'confirmed' THEN l.latitude  END     AS latitude,
-      CASE WHEN l.status = 'confirmed' THEN l.longitude END     AS longitude
+      CASE WHEN l.status = 'confirmed' THEN l.latitude  END      AS latitude,
+      CASE WHEN l.status = 'confirmed' THEN l.longitude END      AS longitude,
+      COALESCE(
+        json_agg(
+          json_build_object('id', c.id, 'name', c.name)
+          ORDER BY c.name
+        ) FILTER (WHERE c.id IS NOT NULL),
+        '[]'::json
+      )                                                           AS categories
     FROM events e
     JOIN sources s ON s.id = e.source_id
     LEFT JOIN locations l
       ON l.id = e.location_id
       AND l.latitude  IS NOT NULL
       AND l.longitude IS NOT NULL
+    LEFT JOIN event_categories ec ON ec.event_id = e.id
+    LEFT JOIN categories c ON c.id = ec.category_id
     WHERE ${whereClause}
+    GROUP BY
+      e.id, e.title, e.event_date, e.event_time,
+      e.event_end_date, e.event_end_time, e.url, e.raw_location,
+      s.name, l.display_name, l.city, l.status, l.latitude, l.longitude
     ORDER BY e.event_date ASC, e.event_time ASC NULLS LAST
     LIMIT 2000`,
     params
   );
 
-  // Collect unique sources for filter dropdown
   const sources = await query<Source>(
     `SELECT id, name FROM sources WHERE is_active = true ORDER BY name`
+  );
+
+  const categories = await query<Category>(
+    `SELECT id, name FROM categories ORDER BY name`
   );
 
   return NextResponse.json({
@@ -101,6 +117,7 @@ export async function GET(req: NextRequest) {
     meta: {
       total: events.length,
       sources,
+      categories,
     },
   });
 }
